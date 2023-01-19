@@ -11,13 +11,27 @@ struct DenseEntry<T> {
 ///
 /// It's implemented as a sparse array of indices mapping to a dense array of the actual elements.
 /// The sparse array is paginated so that the memory usage is acceptable.
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct SparseSet<T> {
     sparse: SparseArray<usize>,
     dense: Vec<DenseEntry<T>>,
 }
 
+impl<T> Default for SparseSet<T> {
+    fn default() -> Self {
+        Self {
+            sparse: SparseArray::default(),
+            dense: vec![],
+        }
+    }
+}
+
 impl<T> SparseSet<T> {
+    #[inline]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Get a reference to an element.
     #[inline]
     pub fn get(&self, index: usize) -> Option<&T> {
