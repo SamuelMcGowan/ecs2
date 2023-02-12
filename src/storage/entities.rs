@@ -221,6 +221,9 @@ mod tests {
 
         assert_eq!(a, EntityId::new(1, 0).unwrap());
         assert_eq!(b, EntityId::new(2, 0).unwrap());
+
+        assert!(storage.is_alive(a));
+        assert!(storage.is_alive(b));
     }
 
     #[test]
@@ -262,8 +265,23 @@ mod tests {
         let mut storage = EntityStorage::new();
 
         let a = storage.alloc().unwrap();
-        storage.dealloc(a).unwrap();
+        let b = storage.alloc().unwrap();
 
-        assert!(!storage.is_alive(EntityId::new(1, 0).unwrap()));
+        assert_eq!(a, EntityId::new(1, 0).unwrap());
+        assert_eq!(b, EntityId::new(2, 0).unwrap());
+
+        assert!(storage.is_alive(a));
+        assert!(storage.is_alive(b));
+        assert_eq!(storage.iter().count(), 2);
+
+        storage.dealloc(a).unwrap();
+        assert!(!storage.is_alive(a));
+        assert!(storage.is_alive(b));
+        assert_eq!(storage.iter().count(), 1);
+
+        storage.dealloc(b).unwrap();
+        assert!(!storage.is_alive(a));
+        assert!(!storage.is_alive(b));
+        assert_eq!(storage.iter().count(), 0);
     }
 }
