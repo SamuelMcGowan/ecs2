@@ -103,6 +103,11 @@ impl<T> SparseSet<T> {
             .iter_mut()
             .map(|dense_entry| &mut dense_entry.element)
     }
+
+    #[inline]
+    pub fn contains(&self, index: usize) -> bool {
+        self.sparse.get(index).is_some()
+    }
 }
 
 #[cfg(test)]
