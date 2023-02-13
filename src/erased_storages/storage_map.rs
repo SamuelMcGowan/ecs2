@@ -25,6 +25,8 @@ pub enum StorageError {
     BorrowMutError(#[from] BorrowMutError),
 }
 
+pub type StorageResult<T> = Result<T, StorageError>;
+
 pub(crate) struct StorageMap<ErasedStorage> {
     storages: FrozenMap<TypeId, Box<RefCell<ErasedStorage>>>,
 }
@@ -46,28 +48,28 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
 
     pub fn borrow_ref<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> Result<Ref<S>, StorageError> {
+    ) -> StorageResult<Ref<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_ref(erased_storage)
     }
 
     pub fn borrow_mut<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> Result<RefMut<S>, StorageError> {
+    ) -> StorageResult<RefMut<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_mut(erased_storage)
     }
 
     pub fn borrow_ref_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
         &self,
-    ) -> Result<Ref<S>, StorageError> {
+    ) -> StorageResult<Ref<S>> {
         let erased_storage = self.get_or_insert::<S>();
         borrow_ref(erased_storage)
     }
 
     pub fn borrow_mut_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
         &self,
-    ) -> Result<RefMut<S>, StorageError> {
+    ) -> StorageResult<RefMut<S>> {
         let erased_storage = self.get_or_insert::<S>();
         borrow_mut(erased_storage)
     }
@@ -75,7 +77,7 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
     #[inline]
     fn get<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> Result<&RefCell<ErasedStorage>, StorageError> {
+    ) -> StorageResult<&RefCell<ErasedStorage>> {
         let type_id = TypeId::of::<S>();
         self.storages
             .get(&type_id)
@@ -97,33 +99,33 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
 pub(crate) struct ErasedStorageIter<'a, ErasedStorage>(Iter<'a, RefCell<ErasedStorage>>);
 
 impl<'a, ErasedStorage> Iterator for ErasedStorageIter<'a, ErasedStorage> {
-    type Item = Result<Ref<'a, ErasedStorage>, BorrowError>;
+    type Item = StorageResult<Ref<'a, ErasedStorage>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.0
             .next()
-            .map(|erased_storage| erased_storage.try_borrow())
+            .map(|erased_storage| erased_storage.try_borrow().map_err(From::from))
     }
 }
 
 pub(crate) struct ErasedStorageIterMut<'a, ErasedStorage>(IterMut<'a, RefCell<ErasedStorage>>);
 
 impl<'a, ErasedStorage> Iterator for ErasedStorageIterMut<'a, ErasedStorage> {
-    type Item = Result<RefMut<'a, ErasedStorage>, BorrowMutError>;
+    type Item = StorageResult<RefMut<'a, ErasedStorage>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.0
             .next()
-            .map(|erased_storage| erased_storage.try_borrow_mut())
+            .map(|erased_storage| erased_storage.try_borrow_mut().map_err(From::from))
     }
 }
 
 #[inline]
 fn borrow_ref<S: ErasableStorage>(
     erased_storage: &RefCell<S::ErasedStorage>,
-) -> Result<Ref<S>, StorageError> {
+) -> StorageResult<Ref<S>> {
     let erased_storage_ref = erased_storage.try_borrow()?;
     let storage = Ref::map(erased_storage_ref, |erased| {
         S::downcast_ref(erased).unwrap()
@@ -134,7 +136,7 @@ fn borrow_ref<S: ErasableStorage>(
 #[inline]
 fn borrow_mut<S: ErasableStorage>(
     erased_storage: &RefCell<S::ErasedStorage>,
-) -> Result<RefMut<S>, StorageError> {
+) -> StorageResult<RefMut<S>> {
     let erased_storage_mut = erased_storage.try_borrow_mut()?;
     let storage = RefMut::map(erased_storage_mut, |erased| {
         S::downcast_mut(erased).unwrap()
