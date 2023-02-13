@@ -65,7 +65,7 @@ impl EntryState {
 }
 
 #[derive(Debug)]
-pub struct EntityStorage {
+pub(crate) struct EntityStorage {
     entries: Vec<EntityEntry>,
     next_free: NonZeroU32,
     num_free: usize,
