@@ -186,6 +186,7 @@ pub struct EntityIter<'a> {
 impl Iterator for EntityIter<'_> {
     type Item = EntityId;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let next = self.iter.next()?;
