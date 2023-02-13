@@ -25,11 +25,11 @@ pub enum StorageError {
     BorrowMutError(#[from] BorrowMutError),
 }
 
-pub(crate) struct StorageSet<ErasedStorage> {
+pub(crate) struct StorageMap<ErasedStorage> {
     storages: FrozenMap<TypeId, Box<RefCell<ErasedStorage>>>,
 }
 
-impl<ErasedStorage> Default for StorageSet<ErasedStorage> {
+impl<ErasedStorage> Default for StorageMap<ErasedStorage> {
     fn default() -> Self {
         Self {
             storages: FrozenMap::new(),
@@ -37,7 +37,7 @@ impl<ErasedStorage> Default for StorageSet<ErasedStorage> {
     }
 }
 
-impl<ErasedStorage> StorageSet<ErasedStorage> {
+impl<ErasedStorage> StorageMap<ErasedStorage> {
     pub fn insert<S: ErasableStorage<ErasedStorage = ErasedStorage>>(&self, storage: S) {
         let type_id = TypeId::of::<S>();
         self.storages

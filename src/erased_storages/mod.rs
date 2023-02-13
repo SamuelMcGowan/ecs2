@@ -1,15 +1,15 @@
 mod components;
 mod uniques;
 use self::components::ErasedComponentStorage;
-use self::storage_set::StorageSet;
+use self::storage_map::StorageMap;
 use self::uniques::ErasedUniqueStorage;
 use crate::storage::entities::EntityStorage;
 
-mod storage_set;
+mod storage_map;
 
 #[derive(Default)]
 pub(crate) struct AllStorages {
     pub(crate) entities: EntityStorage,
-    pub(crate) components: StorageSet<ErasedComponentStorage>,
-    pub(crate) uniques: StorageSet<ErasedUniqueStorage>,
+    pub(crate) components: StorageMap<ErasedComponentStorage>,
+    pub(crate) uniques: StorageMap<ErasedUniqueStorage>,
 }

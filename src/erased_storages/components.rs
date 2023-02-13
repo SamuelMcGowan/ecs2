@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::storage_set::ErasableStorage;
+use super::storage_map::ErasableStorage;
 use crate::storage::components::{Component, ComponentStorage};
 use crate::storage::entities::EntityId;
 
