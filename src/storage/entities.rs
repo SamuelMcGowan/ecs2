@@ -25,6 +25,15 @@ impl std::fmt::Debug for EntityId {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum EntityError {
+    #[error("no more entities available")]
+    OutOfEntities,
+
+    #[error("entity is dead")]
+    DeadEntity,
+}
+
 #[derive(Debug, Clone, Copy)]
 struct EntityEntry {
     state: EntryState,
@@ -55,26 +64,24 @@ impl EntryState {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum EntityError {
-    #[error("no more entities available")]
-    OutOfEntities,
-
-    #[error("entity is dead")]
-    DeadEntity,
-}
-
 #[derive(Debug)]
 pub struct EntityStorage {
-    storage: Vec<EntityEntry>,
+    entries: Vec<EntityEntry>,
     next_free: NonZeroU32,
     num_free: usize,
 }
 
 impl Default for EntityStorage {
+    #[inline]
     fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl EntityStorage {
+    pub fn new() -> Self {
         Self {
-            storage: vec![EntityEntry {
+            entries: vec![EntityEntry {
                 // We need one dummy entity so that no real entity has an index of zero.
 
                 // This isn't free, but it can't be marked as occupied, and it
@@ -87,18 +94,11 @@ impl Default for EntityStorage {
             num_free: 0,
         }
     }
-}
-
-impl EntityStorage {
-    #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
 
     /// Allocate a new entity.
     pub fn alloc(&mut self) -> Result<EntityId, EntityError> {
         if self.num_free > 0 {
-            let entry = &mut self.storage[u32::from(self.next_free) as usize];
+            let entry = &mut self.entries[u32::from(self.next_free) as usize];
             let index = self.next_free;
 
             // Pop from the implicit linked list.
@@ -110,7 +110,7 @@ impl EntityStorage {
         } else {
             // The storage length will never be greater than `u32::MAX`, so it's fine to
             // truncate it.
-            let index = self.storage.len() as u32;
+            let index = self.entries.len() as u32;
 
             if index == u32::MAX {
                 return Err(EntityError::OutOfEntities);
@@ -120,7 +120,7 @@ impl EntityStorage {
                 state: EntryState::Alive,
                 version: 0,
             };
-            self.storage.push(entity);
+            self.entries.push(entity);
 
             Ok(entity.as_id(NonZeroU32::new(index).unwrap()))
         }
@@ -132,7 +132,7 @@ impl EntityStorage {
             return Err(EntityError::DeadEntity);
         }
 
-        let entry = &mut self.storage[u32::from(entity.index) as usize];
+        let entry = &mut self.entries[u32::from(entity.index) as usize];
 
         // Increment the version.
         // Version will not be greater than `u32::MAX` - 1, so it won't overflow.
@@ -154,7 +154,7 @@ impl EntityStorage {
     /// Check if an entity is alive (and present in this storage).
     #[inline]
     pub fn is_alive(&self, entity: EntityId) -> bool {
-        let Some(stored) = self.storage.get(u32::from(entity.index) as usize) else {
+        let Some(stored) = self.entries.get(u32::from(entity.index) as usize) else {
             return false;
         };
 
@@ -172,7 +172,7 @@ impl EntityStorage {
     #[inline]
     pub fn iter(&self) -> EntityIter {
         EntityIter {
-            iter: self.storage.iter(),
+            iter: self.entries.iter(),
             index: 0,
         }
     }
