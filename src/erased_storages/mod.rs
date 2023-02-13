@@ -8,7 +8,7 @@ use crate::storage::entities::EntityStorage;
 mod storage_set;
 
 #[derive(Default)]
-pub struct AllStorages {
+pub(crate) struct AllStorages {
     pub(crate) entities: EntityStorage,
     pub(crate) components: StorageSet<ErasedComponentStorage>,
     pub(crate) uniques: StorageSet<ErasedUniqueStorage>,
