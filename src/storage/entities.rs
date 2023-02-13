@@ -17,6 +17,11 @@ impl EntityId {
             version,
         })
     }
+
+    #[inline]
+    pub(crate) fn index(&self) -> usize {
+        u32::from(self.index) as usize
+    }
 }
 
 impl std::fmt::Debug for EntityId {
@@ -132,7 +137,7 @@ impl EntityStorage {
             return Err(EntityError::DeadEntity);
         }
 
-        let entry = &mut self.entries[u32::from(entity.index) as usize];
+        let entry = &mut self.entries[entity.index()];
 
         // Increment the version.
         // Version will not be greater than `u32::MAX` - 1, so it won't overflow.
@@ -154,7 +159,7 @@ impl EntityStorage {
     /// Check if an entity is alive (and present in this storage).
     #[inline]
     pub fn is_alive(&self, entity: EntityId) -> bool {
-        let Some(stored) = self.entries.get(u32::from(entity.index) as usize) else {
+        let Some(stored) = self.entries.get(entity.index()) else {
             return false;
         };
 
