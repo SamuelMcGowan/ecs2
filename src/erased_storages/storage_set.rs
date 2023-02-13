@@ -1,9 +1,8 @@
 use std::any::{Any, TypeId};
 use std::cell::{BorrowError, BorrowMutError, Ref, RefCell, RefMut};
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::marker::PhantomData;
 use std::slice::{Iter, IterMut};
+
+use elsa::FrozenMap;
 
 pub(crate) trait ErasableStorage: Any + Sized {
     type ErasedStorage;
@@ -14,104 +13,84 @@ pub(crate) trait ErasableStorage: Any + Sized {
     fn downcast_mut(erased: &mut Self::ErasedStorage) -> Option<&mut Self>;
 }
 
-pub(crate) struct StorageIdx<S: ErasableStorage> {
-    idx: usize,
-    phantom_data: PhantomData<S>,
+#[derive(Debug, thiserror::Error)]
+pub enum StorageError {
+    #[error("storage is missing")]
+    StorageMissing,
+
+    #[error("{0}")]
+    BorrowError(#[from] BorrowError),
+
+    #[error("{0}")]
+    BorrowMutError(#[from] BorrowMutError),
 }
 
 pub(crate) struct StorageSet<ErasedStorage> {
-    lookup: HashMap<TypeId, usize>,
-    storages: Vec<RefCell<ErasedStorage>>,
+    storages: FrozenMap<TypeId, Box<RefCell<ErasedStorage>>>,
 }
 
 impl<ErasedStorage> Default for StorageSet<ErasedStorage> {
     fn default() -> Self {
         Self {
-            lookup: HashMap::new(),
-            storages: vec![],
+            storages: FrozenMap::new(),
         }
     }
 }
 
 impl<ErasedStorage> StorageSet<ErasedStorage> {
-    /// Panics if the new storage capacity exceeds `isize::MAX` bytes.
-    fn insert<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
-        &mut self,
-        storage: S,
-    ) -> Option<usize> {
+    pub fn insert<S: ErasableStorage<ErasedStorage = ErasedStorage>>(&self, storage: S) {
         let type_id = TypeId::of::<S>();
-        match self.lookup.entry(type_id) {
-            Entry::Vacant(entry) => {
-                let idx = self.storages.len();
-                let storage = RefCell::new(storage.erase());
-
-                self.storages.push(storage);
-                entry.insert(idx);
-
-                Some(idx)
-            }
-            Entry::Occupied(_) => None,
-        }
+        self.storages
+            .insert(type_id, Box::new(RefCell::new(storage.erase())));
     }
 
-    fn lookup<S: ErasableStorage<ErasedStorage = ErasedStorage>>(&self) -> Option<StorageIdx<S>> {
+    pub fn borrow_ref<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+        &self,
+    ) -> Result<Ref<S>, StorageError> {
+        let erased_storage = self.get::<S>()?;
+        borrow_ref(erased_storage)
+    }
+
+    pub fn borrow_mut<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+        &self,
+    ) -> Result<RefMut<S>, StorageError> {
+        let erased_storage = self.get::<S>()?;
+        borrow_mut(erased_storage)
+    }
+
+    pub fn borrow_ref_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+        &self,
+    ) -> Result<Ref<S>, StorageError> {
+        let erased_storage = self.get_or_insert::<S>();
+        borrow_ref(erased_storage)
+    }
+
+    pub fn borrow_mut_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+        &self,
+    ) -> Result<RefMut<S>, StorageError> {
+        let erased_storage = self.get_or_insert::<S>();
+        borrow_mut(erased_storage)
+    }
+
+    #[inline]
+    fn get<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+        &self,
+    ) -> Result<&RefCell<ErasedStorage>, StorageError> {
         let type_id = TypeId::of::<S>();
-        Some(StorageIdx {
-            idx: self.lookup.get(&type_id).copied()?,
-            phantom_data: PhantomData,
+        self.storages
+            .get(&type_id)
+            .ok_or(StorageError::StorageMissing)
+    }
+
+    #[inline]
+    fn get_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+        &self,
+    ) -> &RefCell<ErasedStorage> {
+        let type_id = TypeId::of::<S>();
+        self.storages.get(&type_id).unwrap_or_else(|| {
+            self.storages
+                .insert(type_id, Box::new(RefCell::new(S::default().erase())))
         })
-    }
-
-    fn lookup_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
-        &mut self,
-    ) -> StorageIdx<S> {
-        let type_id = TypeId::of::<S>();
-
-        let idx = match self.lookup.entry(type_id) {
-            Entry::Vacant(entry) => {
-                let idx = self.storages.len();
-                let storage = RefCell::new(S::default().erase());
-
-                self.storages.push(storage);
-                entry.insert(idx);
-
-                idx
-            }
-            Entry::Occupied(entry) => *entry.get(),
-        };
-
-        StorageIdx {
-            idx,
-            phantom_data: PhantomData,
-        }
-    }
-
-    /// Panics if index is not valid for this storage.
-    fn borrow_ref<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
-        &self,
-        idx: StorageIdx<S>,
-    ) -> Result<Ref<S>, BorrowError> {
-        let erased_storage_ref = self.storages[idx.idx].try_borrow()?;
-
-        let storage = Ref::map(erased_storage_ref, |erased| {
-            S::downcast_ref(erased).unwrap()
-        });
-
-        Ok(storage)
-    }
-
-    /// Panics if index is not valid for this storage.
-    fn borrow_mut<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
-        &self,
-        idx: StorageIdx<S>,
-    ) -> Result<RefMut<S>, BorrowMutError> {
-        let erased_storage_ref = self.storages[idx.idx].try_borrow_mut()?;
-
-        let storage = RefMut::map(erased_storage_ref, |erased| {
-            S::downcast_mut(erased).unwrap()
-        });
-
-        Ok(storage)
     }
 }
 
@@ -139,4 +118,26 @@ impl<'a, ErasedStorage> Iterator for ErasedStorageIterMut<'a, ErasedStorage> {
             .next()
             .map(|erased_storage| erased_storage.try_borrow_mut())
     }
+}
+
+#[inline]
+fn borrow_ref<S: ErasableStorage>(
+    erased_storage: &RefCell<S::ErasedStorage>,
+) -> Result<Ref<S>, StorageError> {
+    let erased_storage_ref = erased_storage.try_borrow()?;
+    let storage = Ref::map(erased_storage_ref, |erased| {
+        S::downcast_ref(erased).unwrap()
+    });
+    Ok(storage)
+}
+
+#[inline]
+fn borrow_mut<S: ErasableStorage>(
+    erased_storage: &RefCell<S::ErasedStorage>,
+) -> Result<RefMut<S>, StorageError> {
+    let erased_storage_mut = erased_storage.try_borrow_mut()?;
+    let storage = RefMut::map(erased_storage_mut, |erased| {
+        S::downcast_mut(erased).unwrap()
+    });
+    Ok(storage)
 }
