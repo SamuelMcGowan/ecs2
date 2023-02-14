@@ -1,8 +1,8 @@
 use std::cell::{Ref, RefMut};
 use std::marker::PhantomData;
 
-use crate::erased_storages::storage_map::{StorageError, StorageResult};
 use crate::prelude::World;
+use crate::query::{QueryError, QueryResult};
 use crate::storage::component::{Component, ComponentStorage};
 use crate::storage::entities::{EntityId, EntityStorage};
 
@@ -18,7 +18,7 @@ pub struct CompBorrow<'a, C: Component> {
 impl<C: Component> Query for Comp<C> {
     type Output<'a> = CompBorrow<'a, C>;
 
-    fn borrow(world: &World) -> StorageResult<Self::Output<'_>> {
+    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_ref_or_insert()?;
         let entities = &world.all_storages.entities;
         Ok(CompBorrow { storage, entities })
@@ -35,7 +35,7 @@ pub struct CompBorrowMut<'a, C: Component> {
 impl<C: Component> Query for CompMut<C> {
     type Output<'a> = CompBorrowMut<'a, C>;
 
-    fn borrow(world: &World) -> StorageResult<Self::Output<'_>> {
+    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_mut_or_insert()?;
         let entities = &world.all_storages.entities;
         Ok(CompBorrowMut { storage, entities })
@@ -43,11 +43,11 @@ impl<C: Component> Query for CompMut<C> {
 }
 
 impl<C: Component> CompBorrow<'_, C> {
-    pub fn get(&self, entity: EntityId) -> StorageResult<&C> {
+    pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
-            return Err(StorageError::EntityDead);
+            return Err(QueryError::EntityDead);
         }
-        self.storage.get(entity).ok_or(StorageError::EntityMissing)
+        self.storage.get(entity).ok_or(QueryError::EntityMissing)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &C> {
@@ -56,27 +56,27 @@ impl<C: Component> CompBorrow<'_, C> {
 }
 
 impl<C: Component> CompBorrowMut<'_, C> {
-    pub fn insert(&mut self, entity: EntityId, component: C) -> StorageResult<Option<C>> {
+    pub fn insert(&mut self, entity: EntityId, component: C) -> QueryResult<Option<C>> {
         if !self.entities.is_alive(entity) {
-            return Err(StorageError::EntityDead);
+            return Err(QueryError::EntityDead);
         }
         Ok(self.storage.insert(entity, component))
     }
 
-    pub fn get(&self, entity: EntityId) -> StorageResult<&C> {
+    pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
-            return Err(StorageError::EntityDead);
+            return Err(QueryError::EntityDead);
         }
-        self.storage.get(entity).ok_or(StorageError::EntityMissing)
+        self.storage.get(entity).ok_or(QueryError::EntityMissing)
     }
 
-    pub fn get_mut(&mut self, entity: EntityId) -> StorageResult<&mut C> {
+    pub fn get_mut(&mut self, entity: EntityId) -> QueryResult<&mut C> {
         if !self.entities.is_alive(entity) {
-            return Err(StorageError::EntityDead);
+            return Err(QueryError::EntityDead);
         }
         self.storage
             .get_mut(entity)
-            .ok_or(StorageError::EntityMissing)
+            .ok_or(QueryError::EntityMissing)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &C> {

@@ -15,7 +15,7 @@ fn add_and_borrow() {
 
     assert!(matches!(my_cmps_mut.get(entity), Ok(MyCmp(12))));
 
-    assert!(matches!(world.borrow::<Comp<MyCmp>>(), Err(StorageError::BorrowError(_))));
+    assert!(matches!(world.borrow::<Comp<MyCmp>>(), Err(QueryError::BorrowError(_))));
     drop(my_cmps_mut);
 
     let my_cmps = world.borrow::<Comp<MyCmp>>().unwrap();

@@ -1,8 +1,10 @@
 use std::any::{Any, TypeId};
-use std::cell::{BorrowError, BorrowMutError, Ref, RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
 use std::slice::{Iter, IterMut};
 
 use elsa::FrozenMap;
+
+use crate::query::{QueryError, QueryResult};
 
 pub(crate) trait ErasableStorage: Any + Sized {
     type ErasedStorage;
@@ -12,26 +14,6 @@ pub(crate) trait ErasableStorage: Any + Sized {
     fn downcast_ref(erased: &Self::ErasedStorage) -> Option<&Self>;
     fn downcast_mut(erased: &mut Self::ErasedStorage) -> Option<&mut Self>;
 }
-
-#[derive(thiserror::Error, Debug)]
-pub enum StorageError {
-    #[error("storage is missing")]
-    StorageMissing,
-
-    #[error("{0}")]
-    BorrowError(#[from] BorrowError),
-
-    #[error("{0}")]
-    BorrowMutError(#[from] BorrowMutError),
-
-    #[error("entity is dead")]
-    EntityDead,
-
-    #[error("entity not found in storage")]
-    EntityMissing,
-}
-
-pub type StorageResult<T> = Result<T, StorageError>;
 
 pub(crate) struct StorageMap<ErasedStorage> {
     storages: FrozenMap<TypeId, Box<RefCell<ErasedStorage>>>,
@@ -54,28 +36,28 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
 
     pub fn borrow_ref<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> StorageResult<Ref<S>> {
+    ) -> QueryResult<Ref<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_ref(erased_storage)
     }
 
     pub fn borrow_mut<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> StorageResult<RefMut<S>> {
+    ) -> QueryResult<RefMut<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_mut(erased_storage)
     }
 
     pub fn borrow_ref_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
         &self,
-    ) -> StorageResult<Ref<S>> {
+    ) -> QueryResult<Ref<S>> {
         let erased_storage = self.get_or_insert::<S>();
         borrow_ref(erased_storage)
     }
 
     pub fn borrow_mut_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
         &self,
-    ) -> StorageResult<RefMut<S>> {
+    ) -> QueryResult<RefMut<S>> {
         let erased_storage = self.get_or_insert::<S>();
         borrow_mut(erased_storage)
     }
@@ -83,11 +65,11 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
     #[inline]
     fn get<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
         &self,
-    ) -> StorageResult<&RefCell<ErasedStorage>> {
+    ) -> QueryResult<&RefCell<ErasedStorage>> {
         let type_id = TypeId::of::<S>();
         self.storages
             .get(&type_id)
-            .ok_or(StorageError::StorageMissing)
+            .ok_or(QueryError::StorageMissing)
     }
 
     #[inline]
@@ -105,7 +87,7 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
 pub(crate) struct ErasedStorageIter<'a, ErasedStorage>(Iter<'a, RefCell<ErasedStorage>>);
 
 impl<'a, ErasedStorage> Iterator for ErasedStorageIter<'a, ErasedStorage> {
-    type Item = StorageResult<Ref<'a, ErasedStorage>>;
+    type Item = QueryResult<Ref<'a, ErasedStorage>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -118,7 +100,7 @@ impl<'a, ErasedStorage> Iterator for ErasedStorageIter<'a, ErasedStorage> {
 pub(crate) struct ErasedStorageIterMut<'a, ErasedStorage>(IterMut<'a, RefCell<ErasedStorage>>);
 
 impl<'a, ErasedStorage> Iterator for ErasedStorageIterMut<'a, ErasedStorage> {
-    type Item = StorageResult<RefMut<'a, ErasedStorage>>;
+    type Item = QueryResult<RefMut<'a, ErasedStorage>>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -131,7 +113,7 @@ impl<'a, ErasedStorage> Iterator for ErasedStorageIterMut<'a, ErasedStorage> {
 #[inline]
 fn borrow_ref<S: ErasableStorage>(
     erased_storage: &RefCell<S::ErasedStorage>,
-) -> StorageResult<Ref<S>> {
+) -> QueryResult<Ref<S>> {
     let erased_storage_ref = erased_storage.try_borrow()?;
     let storage = Ref::map(erased_storage_ref, |erased| {
         S::downcast_ref(erased).unwrap()
@@ -142,7 +124,7 @@ fn borrow_ref<S: ErasableStorage>(
 #[inline]
 fn borrow_mut<S: ErasableStorage>(
     erased_storage: &RefCell<S::ErasedStorage>,
-) -> StorageResult<RefMut<S>> {
+) -> QueryResult<RefMut<S>> {
     let erased_storage_mut = erased_storage.try_borrow_mut()?;
     let storage = RefMut::map(erased_storage_mut, |erased| {
         S::downcast_mut(erased).unwrap()
