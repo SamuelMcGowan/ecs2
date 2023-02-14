@@ -1,5 +1,6 @@
-use super::entities::EntityId;
 use crate::sparse::SparseSet;
+
+use super::entities::EntityId;
 
 pub trait Component: 'static {}
 

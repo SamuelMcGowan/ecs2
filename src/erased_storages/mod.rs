@@ -1,12 +1,13 @@
-mod component;
-mod unique;
-
-pub(crate) mod storage_map;
+use crate::storage::entities::EntityStorage;
 
 use self::component::ErasedComponentStorage;
 use self::storage_map::StorageMap;
 use self::unique::ErasedUniqueStorage;
-use crate::storage::entities::EntityStorage;
+
+mod component;
+mod unique;
+
+pub(crate) mod storage_map;
 
 #[derive(Default)]
 pub(crate) struct AllStorages {

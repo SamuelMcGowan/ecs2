@@ -1,7 +1,8 @@
 use std::any::Any;
 
-use super::storage_map::ErasableStorage;
 use crate::storage::unique::{Unique, UniqueStorage};
+
+use super::storage_map::ErasableStorage;
 
 pub(crate) struct ErasedUniqueStorage(Box<dyn Any>);
 

@@ -1,7 +1,7 @@
-pub mod component;
-
 use crate::erased_storages::storage_map::StorageResult;
 use crate::prelude::World;
+
+pub mod component;
 
 pub trait Query {
     type Output<'a>;

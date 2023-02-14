@@ -113,6 +113,7 @@ impl<T> SparseSet<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn add_elements() {
         let mut set = SparseSet::default();

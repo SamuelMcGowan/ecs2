@@ -1,8 +1,9 @@
 use std::any::Any;
 
-use super::storage_map::ErasableStorage;
 use crate::storage::component::{Component, ComponentStorage};
 use crate::storage::entities::EntityId;
+
+use super::storage_map::ErasableStorage;
 
 trait ErasedComponentStorageTrait: Any {
     fn as_any(&self) -> &dyn Any;

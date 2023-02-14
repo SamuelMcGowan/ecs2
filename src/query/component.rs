@@ -1,13 +1,15 @@
 use std::cell::{Ref, RefMut};
 use std::marker::PhantomData;
 
-use super::Query;
 use crate::erased_storages::storage_map::{StorageError, StorageResult};
 use crate::prelude::World;
 use crate::storage::component::{Component, ComponentStorage};
 use crate::storage::entities::{EntityId, EntityStorage};
 
+use super::Query;
+
 pub struct Comp<C: Component>(PhantomData<C>);
+
 pub struct CompBorrow<'a, C: Component> {
     storage: Ref<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
@@ -24,6 +26,7 @@ impl<C: Component> Query for Comp<C> {
 }
 
 pub struct CompMut<C: Component>(PhantomData<C>);
+
 pub struct CompBorrowMut<'a, C: Component> {
     storage: RefMut<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
