@@ -1,6 +1,7 @@
 use crate::prelude::World;
 
 pub mod component;
+pub mod unique;
 
 pub trait Query {
     type Output<'a>;
