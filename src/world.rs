@@ -1,7 +1,7 @@
 use crate::erased_storages::AllStorages;
-use crate::prelude::Query;
-use crate::query::QueryResult;
+use crate::query::{Query, QueryResult};
 use crate::storage::entities::{EntityError, EntityId};
+use crate::storage::unique::{Unique, UniqueStorage};
 
 #[derive(Default)]
 pub struct World {
@@ -17,6 +17,11 @@ impl World {
     #[inline]
     pub fn spawn(&mut self) -> Result<EntityId, EntityError> {
         self.all_storages.entities.alloc()
+    }
+
+    #[inline]
+    pub fn insert_unique<T: Unique>(&mut self, unique: T) {
+        self.all_storages.uniques.insert(UniqueStorage(unique));
     }
 
     #[inline]
