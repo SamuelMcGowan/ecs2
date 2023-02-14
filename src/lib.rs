@@ -1,16 +1,15 @@
-mod erased_storages;
-mod query;
+pub mod query;
+pub mod storage;
+pub mod world;
+
 mod sparse;
-mod storage;
-mod world;
+mod erased_storages;
 
 pub mod prelude {
-    pub use crate::query::component::{Comp, CompBorrow, CompBorrowMut, CompMut};
+    pub use crate::query::component::{Comp, CompMut, CompBorrow, CompBorrowMut};
     pub use crate::query::Query;
-    pub use crate::query::QueryError;
-    pub use crate::query::QueryResult;
     pub use crate::storage::component::Component;
-    pub use crate::storage::entities::{EntityError, EntityId, EntityIter};
+    pub use crate::storage::entities::EntityId;
     pub use crate::storage::unique::Unique;
     pub use crate::world::World;
 }

@@ -1,10 +1,10 @@
 use std::cell::{Ref, RefMut};
 use std::marker::PhantomData;
 
-use crate::prelude::World;
 use crate::query::{QueryError, QueryResult};
 use crate::storage::component::{Component, ComponentStorage};
 use crate::storage::entities::{EntityId, EntityStorage};
+use crate::world::World;
 
 use super::Query;
 

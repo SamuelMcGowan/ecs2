@@ -7,7 +7,7 @@ use self::unique::ErasedUniqueStorage;
 mod component;
 mod unique;
 
-pub(crate) mod storage_map;
+mod storage_map;
 
 #[derive(Default)]
 pub(crate) struct AllStorages {

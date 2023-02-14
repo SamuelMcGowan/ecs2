@@ -1,4 +1,5 @@
 use ecs2::prelude::*;
+use ecs2::query::QueryError;
 
 #[derive(Debug)]
 struct MyCmp(usize);

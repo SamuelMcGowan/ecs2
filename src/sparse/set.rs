@@ -12,7 +12,7 @@ struct DenseEntry<T> {
 /// It's implemented as a sparse array of indices mapping to a dense array of the actual elements.
 /// The sparse array is paginated so that the memory usage is acceptable.
 #[derive(Debug, Clone)]
-pub struct SparseSet<T> {
+pub(crate) struct SparseSet<T> {
     sparse: SparseArray<usize>,
     dense: Vec<DenseEntry<T>>,
 }
