@@ -1,11 +1,11 @@
-use crate::prelude::World;
+use crate::{prelude::World, world::WorldData};
 
 pub mod component;
 pub mod unique;
 
-pub trait Query {
+pub trait Query<D: WorldData> {
     type Output<'a>;
-    fn borrow(world: &World) -> QueryResult<Self::Output<'_>>;
+    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>>;
 }
 
 #[derive(thiserror::Error, Debug)]

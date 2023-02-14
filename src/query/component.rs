@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use crate::query::{QueryError, QueryResult};
 use crate::storage::component::{Component, ComponentStorage};
 use crate::storage::entities::{EntityId, EntityStorage};
-use crate::world::World;
+use crate::world::{World, WorldData};
 
 use super::Query;
 
@@ -15,10 +15,10 @@ pub struct BorrowComp<'a, C: Component> {
     entities: &'a EntityStorage,
 }
 
-impl<C: Component> Query for QueryComp<C> {
+impl<C: Component, D: WorldData> Query<D> for QueryComp<C> {
     type Output<'a> = BorrowComp<'a, C>;
 
-    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
+    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_ref_or_insert()?;
         let entities = &world.all_storages.entities;
         Ok(BorrowComp { storage, entities })
@@ -32,10 +32,10 @@ pub struct BorrowCompMut<'a, C: Component> {
     entities: &'a EntityStorage,
 }
 
-impl<C: Component> Query for QueryCompMut<C> {
+impl<C: Component, D: WorldData> Query<D> for QueryCompMut<C> {
     type Output<'a> = BorrowCompMut<'a, C>;
 
-    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
+    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_mut_or_insert()?;
         let entities = &world.all_storages.entities;
         Ok(BorrowCompMut { storage, entities })

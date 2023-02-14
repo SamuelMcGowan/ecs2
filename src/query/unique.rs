@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use crate::prelude::World;
 use crate::query::{Query, QueryResult};
 use crate::storage::unique::{Unique, UniqueStorage};
+use crate::world::WorldData;
 
 pub struct QueryUnique<T: Unique>(PhantomData<T>);
 
@@ -11,10 +12,10 @@ pub struct BorrowUnique<'a, T: Unique> {
     storage: Ref<'a, UniqueStorage<T>>,
 }
 
-impl<T: Unique> Query for QueryUnique<T> {
+impl<T: Unique, D: WorldData> Query<D> for QueryUnique<T> {
     type Output<'a> = BorrowUnique<'a, T>;
 
-    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
+    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.uniques.borrow_ref()?;
         Ok(BorrowUnique { storage })
     }
@@ -26,10 +27,10 @@ pub struct BorrowUniqueMut<'a, T: Unique> {
     storage: RefMut<'a, UniqueStorage<T>>,
 }
 
-impl<T: Unique> Query for QueryUniqueMut<T> {
+impl<T: Unique, D: WorldData> Query<D> for QueryUniqueMut<T> {
     type Output<'a> = BorrowUniqueMut<'a, T>;
 
-    fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
+    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.uniques.borrow_mut()?;
         Ok(BorrowUniqueMut { storage })
     }

@@ -1,14 +1,19 @@
+use std::cell::RefCell;
 use crate::erased_storages::AllStorages;
 use crate::query::{Query, QueryResult};
 use crate::storage::entities::{EntityError, EntityId};
 use crate::storage::unique::{Unique, UniqueStorage};
 
+pub trait WorldData: Default + 'static {}
+impl WorldData for () {}
+
 #[derive(Default)]
-pub struct World {
+pub struct World<D: WorldData = ()> {
     pub(crate) all_storages: AllStorages,
+    pub data: RefCell<D>,
 }
 
-impl World {
+impl<D: WorldData> World<D> {
     #[inline]
     pub fn new() -> Self {
         Self::default()
@@ -25,7 +30,7 @@ impl World {
     }
 
     #[inline]
-    pub fn borrow<Q: Query>(&self) -> QueryResult<Q::Output<'_>> {
+    pub fn borrow<Q: Query<D>>(&self) -> QueryResult<Q::Output<'_>> {
         Q::borrow(self)
     }
 }

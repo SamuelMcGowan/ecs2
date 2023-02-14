@@ -10,7 +10,7 @@ impl Unique for MyUnique {}
 
 #[test]
 fn add_and_borrow_comp() {
-    let mut world = World::new();
+    let mut world = World::<()>::new();
 
     let entity = world.spawn().unwrap();
 
@@ -31,7 +31,7 @@ fn add_and_borrow_comp() {
 
 #[test]
 fn add_and_borrow_unique() {
-    let mut world = World::new();
+    let mut world = World::<()>::new();
 
     world.insert_unique(MyUnique("hello, world!".to_owned()));
 

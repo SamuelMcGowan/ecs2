@@ -12,5 +12,5 @@ pub mod prelude {
     pub use crate::storage::component::Component;
     pub use crate::storage::entities::EntityId;
     pub use crate::storage::unique::Unique;
-    pub use crate::world::World;
+    pub use crate::world::{World, WorldData};
 }
