@@ -13,7 +13,7 @@ pub(crate) trait ErasableStorage: Any + Sized {
     fn downcast_mut(erased: &mut Self::ErasedStorage) -> Option<&mut Self>;
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(thiserror::Error, Debug)]
 pub enum StorageError {
     #[error("storage is missing")]
     StorageMissing,
@@ -23,6 +23,12 @@ pub enum StorageError {
 
     #[error("{0}")]
     BorrowMutError(#[from] BorrowMutError),
+
+    #[error("entity is dead")]
+    EntityDead,
+
+    #[error("entity not found in storage")]
+    EntityMissing,
 }
 
 pub type StorageResult<T> = Result<T, StorageError>;
