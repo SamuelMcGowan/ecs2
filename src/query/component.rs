@@ -8,41 +8,41 @@ use crate::world::World;
 
 use super::Query;
 
-pub struct Comp<C: Component>(PhantomData<C>);
+pub struct QueryComp<C: Component>(PhantomData<C>);
 
-pub struct CompBorrow<'a, C: Component> {
+pub struct BorrowComp<'a, C: Component> {
     storage: Ref<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
 }
 
-impl<C: Component> Query for Comp<C> {
-    type Output<'a> = CompBorrow<'a, C>;
+impl<C: Component> Query for QueryComp<C> {
+    type Output<'a> = BorrowComp<'a, C>;
 
     fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_ref_or_insert()?;
         let entities = &world.all_storages.entities;
-        Ok(CompBorrow { storage, entities })
+        Ok(BorrowComp { storage, entities })
     }
 }
 
-pub struct CompMut<C: Component>(PhantomData<C>);
+pub struct QueryCompMut<C: Component>(PhantomData<C>);
 
-pub struct CompBorrowMut<'a, C: Component> {
+pub struct BorrowCompMut<'a, C: Component> {
     storage: RefMut<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
 }
 
-impl<C: Component> Query for CompMut<C> {
-    type Output<'a> = CompBorrowMut<'a, C>;
+impl<C: Component> Query for QueryCompMut<C> {
+    type Output<'a> = BorrowCompMut<'a, C>;
 
     fn borrow(world: &World) -> QueryResult<Self::Output<'_>> {
         let storage = world.all_storages.components.borrow_mut_or_insert()?;
         let entities = &world.all_storages.entities;
-        Ok(CompBorrowMut { storage, entities })
+        Ok(BorrowCompMut { storage, entities })
     }
 }
 
-impl<C: Component> CompBorrow<'_, C> {
+impl<C: Component> BorrowComp<'_, C> {
     pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -55,7 +55,7 @@ impl<C: Component> CompBorrow<'_, C> {
     }
 }
 
-impl<C: Component> CompBorrowMut<'_, C> {
+impl<C: Component> BorrowCompMut<'_, C> {
     pub fn insert(&mut self, entity: EntityId, component: C) -> QueryResult<Option<C>> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
