@@ -1,6 +1,7 @@
+use std::cell::RefMut;
+
 use ecs2::prelude::*;
 use ecs2::query::QueryResult;
-use std::cell::RefMut;
 
 #[derive(Default)]
 pub struct GameInfo {

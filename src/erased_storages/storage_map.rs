@@ -28,34 +28,34 @@ impl<ErasedStorage> Default for StorageMap<ErasedStorage> {
 }
 
 impl<ErasedStorage> StorageMap<ErasedStorage> {
-    pub fn insert<S: ErasableStorage<ErasedStorage = ErasedStorage>>(&self, storage: S) {
+    pub fn insert<S: ErasableStorage<ErasedStorage=ErasedStorage>>(&self, storage: S) {
         let type_id = TypeId::of::<S>();
         self.storages
             .insert(type_id, Box::new(RefCell::new(storage.erase())));
     }
 
-    pub fn borrow_ref<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+    pub fn borrow_ref<S: ErasableStorage<ErasedStorage=ErasedStorage>>(
         &self,
     ) -> QueryResult<Ref<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_ref(erased_storage)
     }
 
-    pub fn borrow_mut<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+    pub fn borrow_mut<S: ErasableStorage<ErasedStorage=ErasedStorage>>(
         &self,
     ) -> QueryResult<RefMut<S>> {
         let erased_storage = self.get::<S>()?;
         borrow_mut(erased_storage)
     }
 
-    pub fn borrow_ref_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+    pub fn borrow_ref_or_insert<S: ErasableStorage<ErasedStorage=ErasedStorage> + Default>(
         &self,
     ) -> QueryResult<Ref<S>> {
         let erased_storage = self.get_or_insert::<S>();
         borrow_ref(erased_storage)
     }
 
-    pub fn borrow_mut_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+    pub fn borrow_mut_or_insert<S: ErasableStorage<ErasedStorage=ErasedStorage> + Default>(
         &self,
     ) -> QueryResult<RefMut<S>> {
         let erased_storage = self.get_or_insert::<S>();
@@ -63,7 +63,7 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
     }
 
     #[inline]
-    fn get<S: ErasableStorage<ErasedStorage = ErasedStorage>>(
+    fn get<S: ErasableStorage<ErasedStorage=ErasedStorage>>(
         &self,
     ) -> QueryResult<&RefCell<ErasedStorage>> {
         let type_id = TypeId::of::<S>();
@@ -73,7 +73,7 @@ impl<ErasedStorage> StorageMap<ErasedStorage> {
     }
 
     #[inline]
-    fn get_or_insert<S: ErasableStorage<ErasedStorage = ErasedStorage> + Default>(
+    fn get_or_insert<S: ErasableStorage<ErasedStorage=ErasedStorage> + Default>(
         &self,
     ) -> &RefCell<ErasedStorage> {
         let type_id = TypeId::of::<S>();

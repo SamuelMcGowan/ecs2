@@ -1,10 +1,12 @@
+use std::cell::RefCell;
+
 use crate::erased_storages::AllStorages;
 use crate::query::{Query, QueryResult};
 use crate::storage::entities::{EntityError, EntityId};
 use crate::storage::unique::{Unique, UniqueStorage};
-use std::cell::RefCell;
 
 pub trait WorldData: Default + 'static {}
+
 impl WorldData for () {}
 
 #[derive(Default)]

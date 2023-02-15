@@ -92,13 +92,13 @@ impl<T> SparseSet<T> {
 
     /// Iterate over the elements in this set.
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> impl Iterator<Item=&T> {
         self.dense.iter().map(|dense_entry| &dense_entry.element)
     }
 
     /// Iterate mutably over the elements in this set.
     #[inline]
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut T> {
         self.dense
             .iter_mut()
             .map(|dense_entry| &mut dense_entry.element)
