@@ -1,5 +1,4 @@
 use std::cell::{Ref, RefMut};
-use std::marker::PhantomData;
 
 use crate::query::{QueryError, QueryResult};
 use crate::storage::component::{Component, ComponentStorage};
@@ -8,41 +7,33 @@ use crate::world::{World, WorldData};
 
 use super::Query;
 
-pub struct QueryComp<C: Component>(PhantomData<C>);
-
-pub struct BorrowComp<'a, C: Component> {
+pub struct QueryComp<'a, C: Component> {
     storage: Ref<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
 }
 
-impl<C: Component, D: WorldData> Query<D> for QueryComp<C> {
-    type Output<'a> = BorrowComp<'a, C>;
-
-    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
+impl<'a, C: Component, D: WorldData> Query<'a, D> for QueryComp<'a, C> {
+    fn borrow(world: &'a World<D>) -> QueryResult<Self> {
         let storage = world.all_storages.components.borrow_ref_or_insert()?;
         let entities = &world.all_storages.entities;
-        Ok(BorrowComp { storage, entities })
+        Ok(QueryComp { storage, entities })
     }
 }
 
-pub struct QueryCompMut<C: Component>(PhantomData<C>);
-
-pub struct BorrowCompMut<'a, C: Component> {
+pub struct QueryCompMut<'a, C: Component> {
     storage: RefMut<'a, ComponentStorage<C>>,
     entities: &'a EntityStorage,
 }
 
-impl<C: Component, D: WorldData> Query<D> for QueryCompMut<C> {
-    type Output<'a> = BorrowCompMut<'a, C>;
-
-    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>> {
+impl<'a, C: Component, D: WorldData> Query<'a, D> for QueryCompMut<'a, C> {
+    fn borrow(world: &'a World<D>) -> QueryResult<Self> {
         let storage = world.all_storages.components.borrow_mut_or_insert()?;
         let entities = &world.all_storages.entities;
-        Ok(BorrowCompMut { storage, entities })
+        Ok(QueryCompMut { storage, entities })
     }
 }
 
-impl<C: Component> BorrowComp<'_, C> {
+impl<C: Component> QueryComp<'_, C> {
     pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -55,7 +46,7 @@ impl<C: Component> BorrowComp<'_, C> {
     }
 }
 
-impl<C: Component> BorrowCompMut<'_, C> {
+impl<C: Component> QueryCompMut<'_, C> {
     pub fn insert(&mut self, entity: EntityId, component: C) -> QueryResult<Option<C>> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);

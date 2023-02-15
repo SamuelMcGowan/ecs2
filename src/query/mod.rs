@@ -3,9 +3,8 @@ use crate::{prelude::World, world::WorldData};
 pub mod component;
 pub mod unique;
 
-pub trait Query<D: WorldData> {
-    type Output<'a>;
-    fn borrow(world: &World<D>) -> QueryResult<Self::Output<'_>>;
+pub trait Query<'a, D: WorldData>: Sized {
+    fn borrow(world: &'a World<D>) -> QueryResult<Self>;
 }
 
 #[derive(thiserror::Error, Debug)]

@@ -9,13 +9,11 @@ pub struct GameInfo {
 
 impl WorldData for GameInfo {}
 
-pub struct QueryGameInfo;
+pub struct QueryGameInfo<'a>(RefMut<'a, GameInfo>);
 
-impl Query<GameInfo> for QueryGameInfo {
-    type Output<'a> = RefMut<'a, GameInfo>;
-
-    fn borrow(world: &World<GameInfo>) -> QueryResult<Self::Output<'_>> {
-        Ok(world.data.try_borrow_mut()?)
+impl<'a> Query<'a, GameInfo> for QueryGameInfo<'a> {
+    fn borrow(world: &'a World<GameInfo>) -> QueryResult<Self> {
+        Ok(QueryGameInfo(world.data.try_borrow_mut()?))
     }
 }
 
@@ -24,6 +22,6 @@ fn custom_query() {
     let world = World::<GameInfo>::new();
 
     let mut game_info = world.borrow::<QueryGameInfo>().unwrap();
-    game_info.name.push_str("foobar");
-    assert_eq!(game_info.name.as_str(), "foobar");
+    game_info.0.name.push_str("foobar");
+    assert_eq!(game_info.0.name.as_str(), "foobar");
 }
