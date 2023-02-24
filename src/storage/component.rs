@@ -35,12 +35,12 @@ impl<C: Component> ComponentStorage<C> {
     }
 
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item=&C> {
+    pub fn iter(&self) -> impl Iterator<Item = &C> {
         self.0.iter()
     }
 
     #[inline]
-    pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut C> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut C> {
         self.0.iter_mut()
     }
 

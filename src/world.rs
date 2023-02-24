@@ -37,7 +37,10 @@ impl<Data: WorldData> World<Data> {
     }
 
     #[inline]
-    pub fn run<'a, S: System<'a, Data, Input, Output>, Input, Output>(&'a self, system: S) -> QueryResult<Output> {
+    pub fn run<'a, S: System<'a, Data, Input, Output>, Input, Output>(
+        &'a self,
+        system: S,
+    ) -> QueryResult<Output> {
         system.run(self)
     }
 }

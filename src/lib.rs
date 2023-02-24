@@ -8,8 +8,8 @@ mod system;
 
 pub mod prelude {
     pub use crate::query::component::{QueryComp, QueryCompMut};
-    pub use crate::query::Query;
     pub use crate::query::unique::{QueryUnique, QueryUniqueMut};
+    pub use crate::query::Query;
     pub use crate::storage::component::Component;
     pub use crate::storage::entities::EntityId;
     pub use crate::storage::unique::Unique;

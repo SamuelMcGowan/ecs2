@@ -44,7 +44,7 @@ impl<C: Component> QueryComp<'_, C> {
         self.storage.get(entity).ok_or(QueryError::EntityMissing)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=&C> {
+    pub fn iter(&self) -> impl Iterator<Item = &C> {
         self.storage.iter()
     }
 }
@@ -77,12 +77,12 @@ impl<C: Component> QueryCompMut<'_, C> {
     }
 
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item=&C> {
+    pub fn iter(&self) -> impl Iterator<Item = &C> {
         self.storage.iter()
     }
 
     #[inline]
-    pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut C> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut C> {
         self.storage.iter_mut()
     }
 }
