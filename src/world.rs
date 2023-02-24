@@ -4,6 +4,7 @@ use crate::erased_storages::AllStorages;
 use crate::query::{Query, QueryResult};
 use crate::storage::entities::{EntityError, EntityId};
 use crate::storage::unique::{Unique, UniqueStorage};
+use crate::system::System;
 
 pub trait WorldData: Default + 'static {}
 
@@ -15,7 +16,7 @@ pub struct World<D: WorldData = ()> {
     pub data: RefCell<D>,
 }
 
-impl<D: WorldData> World<D> {
+impl<Data: WorldData> World<Data> {
     #[inline]
     pub fn new() -> Self {
         Self::default()
@@ -31,7 +32,12 @@ impl<D: WorldData> World<D> {
         self.all_storages.uniques.insert(UniqueStorage(unique));
     }
 
-    pub fn borrow<'a, Q: Query<'a, D>>(&'a self) -> QueryResult<Q> {
+    pub fn borrow<'a, Q: Query<'a, Data>>(&'a self) -> QueryResult<Q> {
         Q::borrow(self)
+    }
+
+    #[inline]
+    pub fn run<'a, S: System<'a, Data, Input, Output>, Input, Output>(&'a self, system: S) -> QueryResult<Output> {
+        system.run(self)
     }
 }

@@ -4,6 +4,7 @@ pub mod world;
 
 mod erased_storages;
 mod sparse;
+mod system;
 
 pub mod prelude {
     pub use crate::query::component::{QueryComp, QueryCompMut};
