@@ -31,7 +31,6 @@ impl<D: WorldData> World<D> {
         self.all_storages.uniques.insert(UniqueStorage(unique));
     }
 
-    #[inline]
     pub fn borrow<'a, Q: Query<'a, D>>(&'a self) -> QueryResult<Q> {
         Q::borrow(self)
     }

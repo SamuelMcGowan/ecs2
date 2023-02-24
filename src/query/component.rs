@@ -13,6 +13,7 @@ pub struct QueryComp<'a, C: Component> {
 }
 
 impl<'a, C: Component, D: WorldData> Query<'a, D> for QueryComp<'a, C> {
+    #[inline]
     fn borrow(world: &'a World<D>) -> QueryResult<Self> {
         let storage = world.all_storages.components.borrow_ref_or_insert()?;
         let entities = &world.all_storages.entities;
@@ -26,6 +27,7 @@ pub struct QueryCompMut<'a, C: Component> {
 }
 
 impl<'a, C: Component, D: WorldData> Query<'a, D> for QueryCompMut<'a, C> {
+    #[inline]
     fn borrow(world: &'a World<D>) -> QueryResult<Self> {
         let storage = world.all_storages.components.borrow_mut_or_insert()?;
         let entities = &world.all_storages.entities;
@@ -34,6 +36,7 @@ impl<'a, C: Component, D: WorldData> Query<'a, D> for QueryCompMut<'a, C> {
 }
 
 impl<C: Component> QueryComp<'_, C> {
+    #[inline]
     pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -47,6 +50,7 @@ impl<C: Component> QueryComp<'_, C> {
 }
 
 impl<C: Component> QueryCompMut<'_, C> {
+    #[inline]
     pub fn insert(&mut self, entity: EntityId, component: C) -> QueryResult<Option<C>> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -54,6 +58,7 @@ impl<C: Component> QueryCompMut<'_, C> {
         Ok(self.storage.insert(entity, component))
     }
 
+    #[inline]
     pub fn get(&self, entity: EntityId) -> QueryResult<&C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -61,6 +66,7 @@ impl<C: Component> QueryCompMut<'_, C> {
         self.storage.get(entity).ok_or(QueryError::EntityMissing)
     }
 
+    #[inline]
     pub fn get_mut(&mut self, entity: EntityId) -> QueryResult<&mut C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
@@ -70,10 +76,12 @@ impl<C: Component> QueryCompMut<'_, C> {
             .ok_or(QueryError::EntityMissing)
     }
 
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item=&C> {
         self.storage.iter()
     }
 
+    #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item=&mut C> {
         self.storage.iter_mut()
     }
