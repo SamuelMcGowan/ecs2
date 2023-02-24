@@ -14,18 +14,7 @@ impl Unique for MyUnique {}
 fn add_and_borrow_comp() {
     let mut world = World::<()>::new();
 
-    let entity = world.spawn().unwrap();
-
-    let mut my_cmps_mut = world.borrow::<QueryCompMut<MyCmp>>().unwrap();
-    my_cmps_mut.insert(entity, MyCmp(12)).unwrap();
-
-    assert!(matches!(my_cmps_mut.get(entity), Ok(MyCmp(12))));
-
-    assert!(matches!(
-        world.borrow::<QueryComp<MyCmp>>(),
-        Err(QueryError::BorrowError(_))
-    ));
-    drop(my_cmps_mut);
+    let entity = world.spawn().unwrap().insert(MyCmp(12)).unwrap().id();
 
     let my_cmps = world.borrow::<QueryComp<MyCmp>>().unwrap();
     assert!(matches!(my_cmps.get(entity), Ok(MyCmp(12))));

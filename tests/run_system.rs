@@ -8,11 +8,10 @@ impl Component for Foo {}
 fn run_system() {
     let mut world = World::<()>::new();
 
-    let a = world.spawn().unwrap();
+    let a = world.spawn().unwrap().insert(Foo(12)).unwrap().id();
 
     world
-        .run(|mut query: QueryCompMut<Foo>| {
-            query.insert(a, Foo(12)).unwrap();
+        .run(|query: QueryComp<Foo>| {
             assert_eq!(query.get(a).unwrap(), &Foo(12));
         })
         .unwrap();

@@ -1,8 +1,9 @@
+use crate::entity_mut::EntityMut;
 use std::cell::RefCell;
 
 use crate::erased_storages::AllStorages;
 use crate::query::{Query, QueryResult};
-use crate::storage::entities::{EntityError, EntityId};
+use crate::storage::entities::EntityError;
 use crate::storage::unique::{Unique, UniqueStorage};
 use crate::system::System;
 
@@ -23,8 +24,12 @@ impl<Data: WorldData> World<Data> {
     }
 
     #[inline]
-    pub fn spawn(&mut self) -> Result<EntityId, EntityError> {
-        self.all_storages.entities.alloc()
+    pub fn spawn(&mut self) -> Result<EntityMut, EntityError> {
+        let entity = self.all_storages.entities.alloc()?;
+        Ok(EntityMut {
+            all_storages: &mut self.all_storages,
+            entity,
+        })
     }
 
     #[inline]

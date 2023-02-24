@@ -2,6 +2,7 @@ pub mod query;
 pub mod storage;
 pub mod world;
 
+mod entity_mut;
 mod erased_storages;
 mod sparse;
 mod system;
