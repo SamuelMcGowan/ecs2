@@ -29,22 +29,18 @@ impl<C: Component> ErasedComponentStorageTrait for ComponentStorage<C> {
 pub(crate) struct ErasedComponentStorage(Box<dyn ErasedComponentStorageTrait>);
 
 impl ErasedComponentStorage {
-    #[inline]
     pub fn new<C: Component>(storage: ComponentStorage<C>) -> Self {
         Self(Box::new(storage))
     }
 
-    #[inline]
     pub fn downcast_ref<S: Any>(&self) -> Option<&S> {
         (*self.0).as_any().downcast_ref()
     }
 
-    #[inline]
     pub fn downcast_mut<S: Any>(&mut self) -> Option<&mut S> {
         (*self.0).as_any_mut().downcast_mut()
     }
 
-    #[inline]
     pub fn remove_entity(&mut self, entity: EntityId) {
         (*self.0).remove_entity(entity);
     }
