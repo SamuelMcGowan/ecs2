@@ -13,7 +13,7 @@ impl<'a> EntityMut<'a> {
     pub fn insert<C: Component>(self, component: C) -> QueryResult<Self> {
         let mut components: RefMut<ComponentStorage<C>> =
             self.all_storages.components.borrow_mut_or_insert().unwrap();
-        components.insert(self.entity, component);
+        components.0.insert(self.entity.index(), component);
         drop(components);
         Ok(self)
     }
@@ -21,7 +21,7 @@ impl<'a> EntityMut<'a> {
     pub fn remove<C: Component>(self) -> QueryResult<Self> {
         let mut components: RefMut<ComponentStorage<C>> =
             self.all_storages.components.borrow_mut()?;
-        let _ = components.remove(self.entity);
+        let _ = components.0.remove(self.entity.index());
         drop(components);
         Ok(self)
     }

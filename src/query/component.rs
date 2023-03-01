@@ -41,11 +41,14 @@ impl<C: Component> QueryComp<'_, C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
         }
-        self.storage.get(entity).ok_or(QueryError::EntityMissing)
+        self.storage
+            .0
+            .get(entity.index())
+            .ok_or(QueryError::EntityMissing)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &C> {
-        self.storage.iter()
+        self.storage.0.iter()
     }
 }
 
@@ -55,7 +58,7 @@ impl<C: Component> QueryCompMut<'_, C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
         }
-        Ok(self.storage.insert(entity, component))
+        Ok(self.storage.0.insert(entity.index(), component))
     }
 
     #[inline]
@@ -63,7 +66,11 @@ impl<C: Component> QueryCompMut<'_, C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
         }
-        self.storage.get(entity).ok_or(QueryError::EntityMissing)
+
+        self.storage
+            .0
+            .get(entity.index())
+            .ok_or(QueryError::EntityMissing)
     }
 
     #[inline]
@@ -71,18 +78,20 @@ impl<C: Component> QueryCompMut<'_, C> {
         if !self.entities.is_alive(entity) {
             return Err(QueryError::EntityDead);
         }
+
         self.storage
-            .get_mut(entity)
+            .0
+            .get_mut(entity.index())
             .ok_or(QueryError::EntityMissing)
     }
 
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &C> {
-        self.storage.iter()
+        self.storage.0.iter()
     }
 
     #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut C> {
-        self.storage.iter_mut()
+        self.storage.0.iter_mut()
     }
 }

@@ -22,7 +22,7 @@ impl<C: Component> ErasedComponentStorageTrait for ComponentStorage<C> {
     }
 
     fn remove_entity(&mut self, entity: EntityId) {
-        self.remove(entity);
+        self.0.remove(entity.index());
     }
 }
 
