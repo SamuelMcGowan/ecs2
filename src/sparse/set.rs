@@ -105,6 +105,20 @@ impl<T> SparseSet<T> {
     }
 
     #[inline]
+    pub fn iter_with_indices(&self) -> impl Iterator<Item = (usize, &T)> {
+        self.dense
+            .iter()
+            .map(|dense_entry| (dense_entry.sparse_index, &dense_entry.element))
+    }
+
+    #[inline]
+    pub fn iter_mut_with_indices(&mut self) -> impl Iterator<Item = (usize, &mut T)> {
+        self.dense
+            .iter_mut()
+            .map(|dense_entry| (dense_entry.sparse_index, &mut dense_entry.element))
+    }
+
+    #[inline]
     pub fn contains(&self, index: usize) -> bool {
         self.sparse.get(index).is_some()
     }

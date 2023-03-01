@@ -45,6 +45,16 @@ impl<C: Component> ComponentStorage<C> {
     }
 
     #[inline]
+    pub fn iter_with_indices(&self) -> impl Iterator<Item = (usize, &C)> {
+        self.0.iter_with_indices()
+    }
+
+    #[inline]
+    pub fn iter_mut_with_indices(&mut self) -> impl Iterator<Item = (usize, &mut C)> {
+        self.0.iter_mut_with_indices()
+    }
+
+    #[inline]
     pub fn contains(&self, entity: EntityId) -> bool {
         self.0.contains(entity.index())
     }
